@@ -1,0 +1,35 @@
+name: Enterprise CI/CD Pipeline
+
+# Định nghĩa thời điểm kích hoạt Pipeline tự động
+on:
+  push:
+    branches: [ "main", "master" ] # Chạy khi có lệnh push lên nhánh main hoặc master
+  pull_request:
+    branches: [ "main", "master" ] # Chạy khi có yêu cầu Pull Request vào nhánh chính
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest # Chạy trên máy chủ ảo Linux cấu hình mới nhất của GitHub
+
+    steps:
+    # 1. Tải mã nguồn của dự án xuống máy chủ ảo
+    - name: Checkout mã nguồn
+      uses: actions/checkout@v4
+
+    # 2. Cài đặt môi trường Python chuẩn để kiểm tra code backend
+    - name: Thiết lập môi trường Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    # 3. Cài đặt các thư viện phụ thuộc (Dependencies) của Backend
+    - name: Cài đặt Dependencies Backend
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # 4. Thử nghiệm Build Docker Image để đảm bảo không có lỗi cú pháp hay thiếu gói cài đặt
+    - name: Kiểm tra cú pháp và build Docker Image
+      run: |
+        docker build -t microsegmentation-lab-backend:latest ./backend

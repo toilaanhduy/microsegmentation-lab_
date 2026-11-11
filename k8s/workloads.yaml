@@ -1,0 +1,435 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: micro-app
+  labels:
+    zone: production
+    environment: enterprise
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+  namespace: micro-app
+type: Opaque
+stringData:
+  POSTGRES_USER: "dbuser"
+  POSTGRES_PASSWORD: "securepass"
+  POSTGRES_DB: "appdb"
+  DATABASE_URL: "postgresql://dbuser:securepass@database:5432/appdb"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: micro-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: micro-app
+data:
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+        index index.html index.htm;
+
+        location / {
+            root /usr/share/nginx/html;
+            try_files $uri $uri/ =404;
+        }
+
+        location /items {
+            proxy_pass http://backend:8000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Enterprise Microsegmentation & Zero-Trust Dashboard</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </head>
+    <body class="bg-gray-50 font-sans leading-normal tracking-normal">
+        <nav class="bg-gradient-to-r from-gray-900 to-indigo-900 p-4 shadow-xl text-white">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-shield-halved text-2xl text-green-400"></i>
+                    <h1 class="text-xl font-bold tracking-wide">Enterprise Microsegmentation & Zero-Trust</h1>
+                </div>
+                <div class="flex items-center space-x-2 bg-green-600 bg-opacity-25 border border-green-400 px-3 py-1 rounded-full text-sm">
+                    <span class="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></span>
+                    <span class="font-semibold text-green-200">High-Availability Secured</span>
+                </div>
+            </div>
+        </nav>
+        <div class="container mx-auto mt-8 px-4 max-w-7xl">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Tổng sản phẩm</p>
+                        <h3 id="statTotal" class="text-2xl font-extrabold text-gray-800 mt-1">0</h3>
+                    </div>
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg text-xl"><i class="fa-solid fa-box-archive"></i></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Tổng giá trị tồn kho</p>
+                        <h3 id="statValue" class="text-2xl font-extrabold text-green-600 mt-1">0 đ</h3>
+                    </div>
+                    <div class="p-3 bg-green-50 text-green-600 rounded-lg text-xl"><i class="fa-solid fa-wallet"></i></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Trạng thái hạ tầng</p>
+                        <h3 class="text-lg font-bold text-blue-600 mt-1">Auto-Scaling HA</h3>
+                    </div>
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-lg text-xl"><i class="fa-solid fa-network-wired"></i></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 h-fit">
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-3">
+                        <i class="fa-solid fa-circle-plus text-indigo-600"></i> Thêm Sản Phẩm Mới
+                    </h2>
+                    <form id="productForm" onsubmit="addProduct(event)">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-xs font-bold uppercase mb-2">Tên sản phẩm</label>
+                            <input type="text" id="name" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Nhập tên sản phẩm...">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-xs font-bold uppercase mb-2">Giá tiền (VNĐ)</label>
+                            <input type="number" step="any" id="price" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Nhập giá tiền...">
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 shadow-md">
+                            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Lưu dữ liệu qua API
+                        </button>
+                    </form>
+                    <div id="statusMsg" class="mt-4 text-sm text-center font-semibold"></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                    <div class="flex justify-between items-center mb-4 border-b pb-3">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-table-list text-indigo-600"></i> Danh Sách Sản Phẩm (PostgreSQL)
+                        </h2>
+                        <button onclick="loadProducts()" class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-200 font-medium transition">
+                            <i class="fa-solid fa-rotate mr-1"></i> Làm mới
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-100 rounded-lg overflow-hidden">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-left text-xs uppercase font-semibold">
+                                    <th class="py-3 px-4 border-b">ID</th>
+                                    <th class="py-3 px-4 border-b">Tên sản phẩm</th>
+                                    <th class="py-3 px-4 border-b">Giá (VNĐ)</th>
+                                    <th class="py-3 px-4 border-b text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productTableBody" class="text-gray-700 text-sm">
+                                <tr>
+                                    <td colspan="4" class="text-center py-6 text-gray-400">Đang tải dữ liệu từ database...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            async function loadProducts() {
+                try {
+                    const response = await fetch('/items');
+                    const items = await response.json();
+                    const tbody = document.getElementById('productTableBody');
+                    tbody.innerHTML = '';
+                    document.getElementById('statTotal').innerText = items.length;
+                    const totalVal = items.reduce((sum, item) => sum + Number(item.price), 0);
+                    document.getElementById('statValue').innerText = totalVal.toLocaleString() + ' đ';
+                    if (items.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-400">Chưa có dữ liệu sản phẩm nào trong cơ sở dữ liệu.</td></tr>';
+                        return;
+                    }
+                    items.forEach(item => {
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 border-b border-gray-50 transition">
+                                <td class="py-3 px-4 text-gray-500 font-mono">#${item.id}</td>
+                                <td class="py-3 px-4 font-semibold text-gray-800">${item.name}</td>
+                                <td class="py-3 px-4 text-green-600 font-bold">${Number(item.price).toLocaleString()} đ</td>
+                                <td class="py-3 px-4 text-center">
+                                    <button onclick="deleteProduct(${item.id})" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Xóa sản phẩm">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } catch (error) {
+                    console.error('Lỗi tải dữ liệu:', error);
+                    document.getElementById('productTableBody').innerHTML = '<tr><td colspan="4" class="text-center py-6 text-red-500 font-medium">Không thể kết nối tới Backend API qua mạng phân đoạn!</td></tr>';
+                }
+            }
+            async function addProduct(event) {
+                event.preventDefault();
+                const name = document.getElementById('name').value;
+                const price = document.getElementById('price').value;
+                const statusMsg = document.getElementById('statusMsg');
+                try {
+                    const response = await fetch('/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: name, price: parseFloat(price) })
+                    });
+                    if (response.ok) {
+                        statusMsg.className = "mt-4 text-sm text-center font-semibold text-green-600";
+                        statusMsg.innerText = "✨ Thêm sản phẩm thành công qua mạng phân đoạn!";
+                        document.getElementById('productForm').reset();
+                        loadProducts();
+                        setTimeout(() => { statusMsg.innerText = ""; }, 3000);
+                    } else {
+                        throw new Error('Lỗi từ server');
+                    }
+                } catch (error) {
+                    statusMsg.className = "mt-4 text-sm text-center font-semibold text-red-600";
+                    statusMsg.innerText = "❌ Thêm thất bại! Kiểm tra lại NetworkPolicy.";
+                }
+            }
+            async function deleteProduct(id) {
+                if (!confirm(`Bạn có chắc muốn xóa sản phẩm #${id} này không?`)) return;
+                try {
+                    const response = await fetch(`/items/${id}`, { method: 'DELETE' });
+                    if (response.ok) { loadProducts(); } else { alert('Xóa sản phẩm thất bại!'); }
+                } catch (error) { console.error('Lỗi xóa:', error); alert('Lỗi kết nối tới hệ thống!'); }
+            }
+            loadProducts();
+        </script>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database
+  namespace: micro-app
+  labels:
+    app: database
+    tier: data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+        tier: data
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: POSTGRES_DB
+        ports:
+        - containerPort: 5432
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database
+  namespace: micro-app
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: database
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: micro-app
+  labels:
+    app: backend
+    tier: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        tier: api
+    spec:
+      # InitContainer bảo đảm Backend chỉ chạy khi Database port 5432 đã sẵn sàng nhận kết nối
+      initContainers:
+      - name: wait-for-database
+        image: busybox:1.36
+        command: ['sh', '-c', 'echo "Đang chờ Database khởi động..."; until nc -z -w 2 database 5432; do sleep 2; done; echo "Database đã sẵn sàng!"']
+      containers:
+      - name: fastapi
+        image: microsegmentation-lab-backend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DATABASE_URL
+        resources:
+          limits:
+            cpu: "300m"
+            memory: "256Mi"
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 3
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: micro-app
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+  selector:
+    app: backend
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: micro-app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: micro-app
+  labels:
+    app: frontend
+    tier: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: web
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25-alpine
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "128Mi"
+          requests:
+            cpu: "20m"
+            memory: "32Mi"
+        volumeMounts:
+        - name: html-volume
+          mountPath: /usr/share/nginx/html
+        - name: nginx-conf-volume
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
+      volumes:
+      - name: html-volume
+        configMap:
+          name: frontend-config
+          items:
+          - key: index.html
+            path: index.html
+      - name: nginx-conf-volume
+        configMap:
+          name: frontend-config
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: micro-app
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080
+  selector:
+    app: frontend

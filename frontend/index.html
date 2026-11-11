@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Microsegmentation Dashboard</title>
+</head>
+<body>
+    <h1>Quản lý sản phẩm (Microsegmentation Demo)</h1>
+    <div>
+        <input type="text" id="itemName" placeholder="Tên sản phẩm">
+        <input type="number" id="itemPrice" placeholder="Giá tiền">
+        <button onclick="addItem()">Thêm dữ liệu</button>
+    </div>
+    <ul id="itemList"></ul>
+    <script>
+        async function fetchItems() {
+            const res = await fetch('/api/items');
+            const data = await res.json();
+            const list = document.getElementById('itemList');
+            list.innerHTML = '';
+            data.forEach(item => {
+                const li = document.createElement('li');
+                li.innerText = `${item.name} - $${item.price}`;
+                list.appendChild(li);
+            });
+        }
+        async function addItem() {
+            const name = document.getElementById('itemName').value;
+            const price = parseFloat(document.getElementById('itemPrice').value);
+            await fetch('/api/items', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, price })
+            });
+            fetchItems();
+        }
+        fetchItems();
+    </script>
+</body>
+</html>

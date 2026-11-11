@@ -4,7 +4,7 @@ metadata:
   name: micro-app
   labels:
     zone: production
-    environment: enterprise
+    environment: enterprise-sec
 ---
 apiVersion: v1
 kind: Secret
@@ -56,100 +56,154 @@ data:
     }
   index.html: |
     <!DOCTYPE html>
-    <html lang="vi">
+    <html lang="vi" class="dark">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Enterprise Microsegmentation & Zero-Trust Dashboard</title>
+        <title>Zero-Trust Enterprise Microsegmentation Dashboard</title>
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
-    <body class="bg-gray-50 font-sans leading-normal tracking-normal">
-        <nav class="bg-gradient-to-r from-gray-900 to-indigo-900 p-4 shadow-xl text-white">
-            <div class="container mx-auto flex justify-between items-center">
+    <body class="bg-gray-950 text-gray-100 font-sans antialiased min-h-screen">
+        <!-- Top Security Navbar -->
+        <nav class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 px-6 py-4 shadow-xl">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
                 <div class="flex items-center space-x-3">
-                    <i class="fa-solid fa-shield-halved text-2xl text-green-400"></i>
-                    <h1 class="text-xl font-bold tracking-wide">Enterprise Microsegmentation & Zero-Trust</h1>
+                    <div class="p-2.5 bg-indigo-600 bg-opacity-20 border border-indigo-500 rounded-xl text-indigo-400">
+                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-tight text-white">Zero-Trust Microsegmentation Lab</h1>
+                        <p class="text-xs text-gray-400">Kubernetes Security Operations Center (SOC)</p>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-2 bg-green-600 bg-opacity-25 border border-green-400 px-3 py-1 rounded-full text-sm">
-                    <span class="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></span>
-                    <span class="font-semibold text-green-200">High-Availability Secured</span>
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex items-center space-x-2 bg-emerald-950 border border-emerald-800 px-3 py-1.5 rounded-full text-xs">
+                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
+                        <span class="font-semibold text-emerald-300">NetworkPolicies Active</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-full text-xs font-mono text-gray-300">
+                        <i class="fa-solid fa-server text-indigo-400"></i> Namespace: micro-app
+                    </div>
                 </div>
             </div>
         </nav>
-        <div class="container mx-auto mt-8 px-4 max-w-7xl">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Tổng sản phẩm</p>
-                        <h3 id="statTotal" class="text-2xl font-extrabold text-gray-800 mt-1">0</h3>
+
+        <!-- Main Container -->
+        <main class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Tổng sản phẩm</p>
+                            <h3 id="statTotal" class="text-3xl font-extrabold text-white mt-2">0</h3>
+                        </div>
+                        <div class="p-3 bg-indigo-900 bg-opacity-40 text-indigo-400 rounded-xl"><i class="fa-solid fa-box-archive text-lg"></i></div>
                     </div>
-                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg text-xl"><i class="fa-solid fa-box-archive"></i></div>
+                    <div class="mt-4 flex items-center text-xs text-emerald-400 font-medium">
+                        <i class="fa-solid fa-arrow-trend-up mr-1.5"></i> Đồng bộ real-time từ DB
+                    </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Tổng giá trị tồn kho</p>
-                        <h3 id="statValue" class="text-2xl font-extrabold text-green-600 mt-1">0 đ</h3>
+
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Tổng giá trị tồn kho</p>
+                            <h3 id="statValue" class="text-3xl font-extrabold text-emerald-400 mt-2">0 đ</h3>
+                        </div>
+                        <div class="p-3 bg-emerald-900 bg-opacity-40 text-emerald-400 rounded-xl"><i class="fa-solid fa-wallet text-lg"></i></div>
                     </div>
-                    <div class="p-3 bg-green-50 text-green-600 rounded-lg text-xl"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="mt-4 flex items-center text-xs text-gray-400 font-medium">
+                        <i class="fa-solid fa-shield-check text-emerald-400 mr-1.5"></i> Protected by PostgreSQL PVC
+                    </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Trạng thái hạ tầng</p>
-                        <h3 class="text-lg font-bold text-blue-600 mt-1">Auto-Scaling HA</h3>
+
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Kiến trúc hệ thống</p>
+                            <h3 class="text-xl font-bold text-blue-400 mt-2">3-Tier High-Avail</h3>
+                        </div>
+                        <div class="p-3 bg-blue-900 bg-opacity-40 text-blue-400 rounded-xl"><i class="fa-solid fa-network-wired text-lg"></i></div>
                     </div>
-                    <div class="p-3 bg-blue-50 text-blue-600 rounded-lg text-xl"><i class="fa-solid fa-network-wired"></i></div>
+                    <div class="mt-4 flex items-center text-xs text-blue-300 font-medium">
+                        <i class="fa-solid fa-circle-check mr-1.5"></i> InitContainers Ready
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Mô hình phân đoạn</p>
+                            <h3 class="text-xl font-bold text-purple-400 mt-2">Default-Deny</h3>
+                        </div>
+                        <div class="p-3 bg-purple-900 bg-opacity-40 text-purple-400 rounded-xl"><i class="fa-solid fa-lock text-lg"></i></div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-purple-300 font-medium">
+                        <i class="fa-solid fa-shield-halved mr-1.5"></i> Zero-Trust Enforced
+                    </div>
                 </div>
             </div>
+
+            <!-- Content Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 h-fit">
-                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-3">
-                        <i class="fa-solid fa-circle-plus text-indigo-600"></i> Thêm Sản Phẩm Mới
+                <!-- Left: Form Action -->
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-lg h-fit">
+                    <h2 class="text-base font-bold text-white mb-5 flex items-center gap-2.5 border-b border-gray-800 pb-4">
+                        <div class="p-2 bg-indigo-600 rounded-lg text-white text-sm"><i class="fa-solid fa-plus"></i></div> 
+                        Thêm Sản Phẩm Mới
                     </h2>
-                    <form id="productForm" onsubmit="addProduct(event)">
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-xs font-bold uppercase mb-2">Tên sản phẩm</label>
-                            <input type="text" id="name" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Nhập tên sản phẩm...">
+                    <form id="productForm" onsubmit="addProduct(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Tên sản phẩm</label>
+                            <input type="text" id="name" required class="w-full bg-gray-950 border border-gray-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-indigo-500 text-sm transition" placeholder="Nhập tên sản phẩm...">
                         </div>
-                        <div class="mb-6">
-                            <label class="block text-gray-700 text-xs font-bold uppercase mb-2">Giá tiền (VNĐ)</label>
-                            <input type="number" step="any" id="price" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Nhập giá tiền...">
+                        <div>
+                            <label class="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Giá tiền (VNĐ)</label>
+                            <input type="number" step="any" id="price" required class="w-full bg-gray-950 border border-gray-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-indigo-500 text-sm transition" placeholder="Nhập giá tiền...">
                         </div>
-                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 shadow-md">
-                            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Lưu dữ liệu qua API
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-lg flex items-center justify-center space-x-2 text-sm">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span>Lưu dữ liệu qua API</span>
                         </button>
                     </form>
                     <div id="statusMsg" class="mt-4 text-sm text-center font-semibold"></div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
-                    <div class="flex justify-between items-center mb-4 border-b pb-3">
-                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                            <i class="fa-solid fa-table-list text-indigo-600"></i> Danh Sách Sản Phẩm (PostgreSQL)
+
+                <!-- Right: Data Table & Live Stream -->
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-lg lg:col-span-2">
+                    <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                        <h2 class="text-base font-bold text-white flex items-center gap-2.5">
+                            <div class="p-2 bg-emerald-600 rounded-lg text-white text-sm"><i class="fa-solid fa-table"></i></div>
+                            Danh Sách Sản Phẩm (PostgreSQL Cluster)
                         </h2>
-                        <button onclick="loadProducts()" class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-200 font-medium transition">
-                            <i class="fa-solid fa-rotate mr-1"></i> Làm mới
+                        <button onclick="loadProducts()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-2 border border-gray-700">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>Làm mới</span>
                         </button>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white border border-gray-100 rounded-lg overflow-hidden">
-                            <thead>
-                                <tr class="bg-gray-50 text-gray-500 text-left text-xs uppercase font-semibold">
-                                    <th class="py-3 px-4 border-b">ID</th>
-                                    <th class="py-3 px-4 border-b">Tên sản phẩm</th>
-                                    <th class="py-3 px-4 border-b">Giá (VNĐ)</th>
-                                    <th class="py-3 px-4 border-b text-center">Thao tác</th>
+                    <div class="overflow-x-auto rounded-xl border border-gray-800">
+                        <table class="min-w-full bg-gray-950 text-left text-sm">
+                            <thead class="bg-gray-900 text-gray-400 text-xs uppercase font-semibold border-b border-gray-800">
+                                <tr>
+                                    <th class="py-3.5 px-4">ID</th>
+                                    <th class="py-3.5 px-4">Tên sản phẩm</th>
+                                    <th class="py-3.5 px-4">Giá (VNĐ)</th>
+                                    <th class="py-3.5 px-4 text-center">Thao tác</th>
                                 </tr>
                             </thead>
-                            <tbody id="productTableBody" class="text-gray-700 text-sm">
+                            <tbody id="productTableBody" class="divide-y divide-gray-900 text-gray-300">
                                 <tr>
-                                    <td colspan="4" class="text-center py-6 text-gray-400">Đang tải dữ liệu từ database...</td>
+                                    <td colspan="4" class="text-center py-8 text-gray-500">Đang đồng bộ dữ liệu bảo mật từ database...</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+
         <script>
             async function loadProducts() {
                 try {
@@ -161,18 +215,18 @@ data:
                     const totalVal = items.reduce((sum, item) => sum + Number(item.price), 0);
                     document.getElementById('statValue').innerText = totalVal.toLocaleString() + ' đ';
                     if (items.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-400">Chưa có dữ liệu sản phẩm nào trong cơ sở dữ liệu.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-500">Chưa có bản ghi dữ liệu nào trong bảng.</td></tr>';
                         return;
                     }
                     items.forEach(item => {
                         tbody.innerHTML += `
-                            <tr class="hover:bg-gray-50 border-b border-gray-50 transition">
-                                <td class="py-3 px-4 text-gray-500 font-mono">#${item.id}</td>
-                                <td class="py-3 px-4 font-semibold text-gray-800">${item.name}</td>
-                                <td class="py-3 px-4 text-green-600 font-bold">${Number(item.price).toLocaleString()} đ</td>
-                                <td class="py-3 px-4 text-center">
-                                    <button onclick="deleteProduct(${item.id})" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Xóa sản phẩm">
-                                        <i class="fa-solid fa-trash-can"></i>
+                            <tr class="hover:bg-gray-900 transition">
+                                <td class="py-4 px-4 text-gray-400 font-mono">#${item.id}</td>
+                                <td class="py-4 px-4 font-semibold text-white">${item.name}</td>
+                                <td class="py-4 px-4 text-emerald-400 font-bold">${Number(item.price).toLocaleString()} đ</td>
+                                <td class="py-4 px-4 text-center">
+                                    <button onclick="deleteProduct(${item.id})" class="text-red-400 hover:text-red-300 bg-red-950 hover:bg-red-900 border border-red-800 p-2 rounded-xl transition shadow-sm" title="Xóa bản ghi">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -180,7 +234,7 @@ data:
                     });
                 } catch (error) {
                     console.error('Lỗi tải dữ liệu:', error);
-                    document.getElementById('productTableBody').innerHTML = '<tr><td colspan="4" class="text-center py-6 text-red-500 font-medium">Không thể kết nối tới Backend API qua mạng phân đoạn!</td></tr>';
+                    document.getElementById('productTableBody').innerHTML = '<tr><td colspan="4" class="text-center py-8 text-red-400">Không thể kết nối đến Backend API qua NetworkPolicy!</td></tr>';
                 }
             }
             async function addProduct(event) {
@@ -195,7 +249,7 @@ data:
                         body: JSON.stringify({ name: name, price: parseFloat(price) })
                     });
                     if (response.ok) {
-                        statusMsg.className = "mt-4 text-sm text-center font-semibold text-green-600";
+                        statusMsg.className = "mt-4 text-sm text-center font-semibold text-emerald-400";
                         statusMsg.innerText = "✨ Thêm sản phẩm thành công qua mạng phân đoạn!";
                         document.getElementById('productForm').reset();
                         loadProducts();
@@ -204,16 +258,16 @@ data:
                         throw new Error('Lỗi từ server');
                     }
                 } catch (error) {
-                    statusMsg.className = "mt-4 text-sm text-center font-semibold text-red-600";
-                    statusMsg.innerText = "❌ Thêm thất bại! Kiểm tra lại NetworkPolicy.";
+                    statusMsg.className = "mt-4 text-sm text-center font-semibold text-red-400";
+                    statusMsg.innerText = "❌ Thêm thất bại! Kiểm tra lại chính sách mạng.";
                 }
             }
             async function deleteProduct(id) {
-                if (!confirm(`Bạn có chắc muốn xóa sản phẩm #${id} này không?`)) return;
+                if (!confirm(`Bạn có chắc muốn xóa bản ghi #${id}?`)) return;
                 try {
                     const response = await fetch(`/items/${id}`, { method: 'DELETE' });
-                    if (response.ok) { loadProducts(); } else { alert('Xóa sản phẩm thất bại!'); }
-                } catch (error) { console.error('Lỗi xóa:', error); alert('Lỗi kết nối tới hệ thống!'); }
+                    if (response.ok) { loadProducts(); } else { alert('Xóa thất bại!'); }
+                } catch (error) { console.error('Lỗi xóa:', error); alert('Lỗi kết nối hệ thống!'); }
             }
             loadProducts();
         </script>
@@ -306,11 +360,10 @@ spec:
         app: backend
         tier: api
     spec:
-      # InitContainer bảo đảm Backend chỉ chạy khi Database port 5432 đã sẵn sàng nhận kết nối
       initContainers:
       - name: wait-for-database
         image: busybox:1.36
-        command: ['sh', '-c', 'echo "Đang chờ Database khởi động..."; until nc -z -w 2 database 5432; do sleep 2; done; echo "Database đã sẵn sàng!"']
+        command: ['sh', '-c', 'echo "Đang kiểm tra kết nối Database..."; until nc -z -w 2 database 5432; do sleep 2; done; echo "Database đã sẵn sàng mở cổng kết nối!"']
       containers:
       - name: fastapi
         image: microsegmentation-lab-backend:latest
